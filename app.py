@@ -321,6 +321,12 @@ def webhook_consuel():
         event = payload["event"]
         item_id = str(event["pulseId"])
 
+        # Ce webhook se déclenche à chaque changement de la colonne "Consuel ST" :
+        # on ne traite que si la nouvelle valeur est "A faire"
+        new_label = (event.get("value") or {}).get("label", {}).get("text", "")
+        if new_label != "A faire":
+            return jsonify({"status": "skipped", "reason": f"Statut '{new_label}' != 'A faire'"}), 200
+
         client_data = get_item_data(item_id)
         materiel = parse_projets(client_data["projets"])
         fields, date_str = build_fields(client_data, materiel)
